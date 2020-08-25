@@ -1,40 +1,50 @@
 import React, { useState, useEffect } from "react";
-import api from './services/api'
+import api from './services/api';
+
 import "./styles.css";
 
 function App() {
-  const [ repositories, setRepositories ] = useState([])
+  const [repositories, setRepositories] = useState([]);
 
   useEffect(() => {
-    api({url: '/projects', params: {title: 'Novo repo 2'}, method: 'GET'}).then(response => setRepositories(response.data)).catch(error => console.log(error))
-  }, [])
+    api.get('repositories').then(response => {
+      setRepositories(response.data);
+    })
+  }, []);
 
   async function handleAddRepository() {
-    const repository = await api.post('project', { title: 'Novo repo', owner: 'repo' })
-    setRepositories([...repositories, repository.data])
+    const response = await api.post('repositories',
+      {
+        title: `Repository ${Date.now()}`,
+        url: "https://github.com/Josimar16",
+        techs: [
+          'reactjs',
+          'nodejs'
+        ]
+      });
+
+    const repository = response.data;
+
+    setRepositories([...repositories, repository]);
   }
 
   async function handleRemoveRepository(id) {
-    await api.delete(`project/${id}`)
-    const index = await repositories.findIndex(repository => repository.id === id)
-    repositories.slice(index, 1)
-    return repositories
+    await api.delete(`repositories/${id}`);
+    setRepositories(repositories.filter(incident => incident.id !== id))
   }
 
   return (
     <div>
       <ul data-testid="repository-list">
-        {
-          repositories.map(
-            repository => 
-              <li key={repository}>
-                {repository.title}
-                <button onClick={() => handleRemoveRepository(repository.id)}>
-                  Remover
-                </button>
-              </li>
-            )
-        }
+        {repositories.map(repository =>
+          <li key={repository.id}>{repository.title}
+
+            <button onClick={() => handleRemoveRepository(repository.id)}>
+              Remover
+              </button>
+          </li>
+        )}
+
       </ul>
 
       <button onClick={handleAddRepository}>Adicionar</button>
